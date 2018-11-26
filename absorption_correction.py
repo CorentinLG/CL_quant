@@ -7,6 +7,44 @@ import numpy as np
 import copy
 import hyperspy.api as hs
 
+
+def correction(s, elts, Quant, result_int, result_mod, alpha, mt, navigation_mask, Ac, wt, dif, Crit, D):
+    """
+    This is a subfunction of the absorption correction method.
+	It calculates the absorption correction factor of each x-ray line at each pixel (Ac). 
+	Then, corrected intensities (result_mod) are calculated based on absorption correction factors, density, thickness and sample geometry)
+	There are different cases depending no the nature of the signal (single spectrum vs profile vs map)
+	A criteria is added to not recalculate a given pixel if convergence has been reached already ("if dif[k]>Crit/100)
+
+    """
+    
+    if len(s.data.shape)==1:
+        for k in range (len(s.metadata.Sample.xray_lines)): 
+            if dif[k]>Crit/100:
+                wt.isig[k] = Quant[k]
+                Ac.data[k] = hs.material.mass_absorption_mixture(wt.data, elts, energies = s.metadata.Sample.xray_lines[k])    
+    if len(s.data.shape)==2: 
+        for i in range(result_int[0].data.shape[0]):
+            if navigation_mask.data[i]== False:
+                for k in range (len(s.metadata.Sample.xray_lines)):
+                    if dif[k][i]>Crit/100:
+                        wt.isig[k] = Quant[k]
+                        Ac.inav[i].data[k] = hs.material.mass_absorption_mixture(wt.inav[i].data, elts, energies = s.metadata.Sample.xray_lines[k])    
+    if len(s.data.shape)==3: 
+        for i in range(result_int[0].data.shape[0]):
+            for j in range (result_int[0].data.shape[1]):
+                if navigation_mask.data[i][j]== False:
+                    for k in range (len(s.metadata.Sample.xray_lines)):
+                        if dif[k][i][j]>Crit/100:
+                            wt.isig[k] = Quant[k]
+                            Ac.inav[j,i].data[k] = hs.material.mass_absorption_mixture(wt.inav[j,i].data, elts, energies = s.metadata.Sample.xray_lines[k])    
+                        
+    ### Calculate the corrected intensities thanks to the abs. correction factors           
+    
+    for k in range (len(s.metadata.Sample.xray_lines)):
+        result_mod[k] = result_int[k]*Ac.isig[k]/(np.ones((D[:-1]))-np.exp(-Ac.isig[k]*mt.isig[0]/sin(alpha)))
+    return result_mod, Ac  
+
 def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, navigation_mask = None, Crit = 0.5, composition_units='atomic'):
     """
     This function quantifies TEM-EDS data accounting for absorption (a function of sample thickness, 
@@ -39,12 +77,14 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
     result = m.get_line_intensity(xray_lines = 'from_metadata', plot_result = False)
     
     """
+    
     if len(s.data.shape) ==4: raise ValueError('The absorption correction routine is not implemented for 2D signals')  # dimensions are gonna that of a 3D signals, 3 navigation dimension.
-        #if t== 0 or d==0 :raise ("thickness and density can't be equal to 0")
+    #if t== 0 or d==0 :raise ("thickness and density can't be equal to 0")
     
     ### First step is to define the dimension of the dataset (single spectrum, line profile or 2D map).
 	# D is a variable containing the navigation dimension and the number of x-ray lines
-	D = []
+	
+    D = []
     for i in range (len(s.data.shape)-1):
         D.append(s.data.shape[i])
     D.append(len(s.metadata.Sample.xray_lines))
@@ -55,7 +95,8 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
         navigation_mask.data[:] = False
     ### To be able to deal with a sample of variable thickness and density, one can provide a density or a thickness map. They are combined here under the 'mt' variable.
  	# If a single value is given as inputs, then it is converted to a signal that has the same dimension as the raw data. 
-	if type(d)==float or type(d)==int and type(t)==float or type(t)==int:
+	
+    if type(d)==float or type(d)==int and type(t)==float or type(t)==int:
         mt = hs.signals.Signal1D(np.zeros(D[:-1]+[1]))
         mt.isig[0] = d*(t*10**-7)
         mt.data[navigation_mask.data] = np.nan
@@ -64,9 +105,11 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
     
 	### dif is a variable constructed as the difference between the composition of each X-ray lines at each position from two successive quantification.
 	# It is used to check if convergence as been reached.
-	dif = np.ones((D[-1:]+D[:-1]))
+	
+    dif = np.ones((D[-1:]+D[:-1]))
 	
 	### Absorption depends on the take off angle, which is calculated here. (Actually should be better to use the take_off_angle function from hyperspy, which requiers the metadata to be carefully written)
+    
     alpha = (s.metadata.Acquisition_instrument.TEM.Detector.EDS.elevation_angle + 
          s.metadata.Acquisition_instrument.TEM.tilt_stage)*pi/180 
     
@@ -80,7 +123,8 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
     result_mod = copy.deepcopy(result)   
     
 	### Ac contains the absorption correction factor for each X-ray lines at each position, and wt is the quantified composition at each pixels.
-	Ac = hs.signals.Signal1D(np.zeros((D)))
+	
+    Ac = hs.signals.Signal1D(np.zeros((D)))
     wt = hs.signals.Signal1D(np.zeros((D)))
 	
 	### A first quantification is ran without correction, to get things started. Quant2 is needed for later comparison of successive iterations.
@@ -102,42 +146,6 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
         for i in range (len(Quant)):
             dif[i]= abs(Quant[i].data-Quant2[i].data)/Quant[i].data
 
-    if composition_units == 'atomic'
-		Quant3 = hs.material.weight_to_atomic(Quant2, elements='auto')
+    if composition_units == 'atomic': Quant3 = hs.material.weight_to_atomic(Quant2, elements='auto')
     return Quant3
-
-
-def correction(s, elts, Quant, result_int, result_mod, alpha, mt, navigation_mask, Ac, wt, dif, Crit, D):
-	"""This is a subfunction of the absorption correction method.
-	It calculates the absorption correction factor of each x-ray line at each pixel (Ac). 
-	Then, corrected intensities (result_mod) are calculated based on absorption correction factors, density, thickness and sample geometry)
-	There are different cases depending no the nature of the signal (single spectrum vs profile vs map)
-	A criteria is added to not recalculate a given pixel if convergence has been reached already ("if dif[k]>Crit/100)
-	"""
-    
-	if len(s.data.shape)==1: 
-        for k in range (len(s.metadata.Sample.xray_lines)):
-            if dif[k]>Crit/100:
-                wt.isig[k] = Quant[k]
-                Ac.data[k] = hs.material.mass_absorption_mixture(wt.data, elts, energies = s.metadata.Sample.xray_lines[k])    
-    if len(s.data.shape)==2: 
-        for i in range(result_int[0].data.shape[0]):
-            if navigation_mask.data[i]== False:
-                for k in range (len(s.metadata.Sample.xray_lines)):
-                    if dif[k][i]>Crit/100:
-                        wt.isig[k] = Quant[k]
-                        Ac.inav[i].data[k] = hs.material.mass_absorption_mixture(wt.inav[i].data, elts, energies = s.metadata.Sample.xray_lines[k])    
-    if len(s.data.shape)==3: 
-        for i in range(result_int[0].data.shape[0]):
-            for j in range (result_int[0].data.shape[1]):
-                if navigation_mask.data[i][j]== False:
-                    for k in range (len(s.metadata.Sample.xray_lines)):
-                        if dif[k][i][j]>Crit/100:
-                            wt.isig[k] = Quant[k]
-                            Ac.inav[j,i].data[k] = hs.material.mass_absorption_mixture(wt.inav[j,i].data, elts, energies = s.metadata.Sample.xray_lines[k])    
-                        
-    ### Calculate the corrected intensities thanks to the abs. correction factors           
-    for k in range (len(s.metadata.Sample.xray_lines)):
-        result_mod[k] = result_int[k]*Ac.isig[k]/(np.ones((D[:-1]))-np.exp(-Ac.isig[k]*mt.isig[0]/sin(alpha)))
-    return result_mod, Ac  
 
