@@ -103,13 +103,13 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
     elif type(t)!=(int and float) and type(d)!= (int and float):
             mt = d*t*10**-7
     
-	### dif is a variable constructed as the difference between the composition of each X-ray lines at each position from two successive quantification.
+	### dif is a variable constructed as the difference between the composition for each X-ray lines at each position from two successive iteration.
 	# It is used to check if convergence as been reached.
 	
     dif = np.ones((D[-1:]+D[:-1]))
 	
 	### Absorption depends on the take off angle, which is calculated here. (Actually should be better to use the take_off_angle function from hyperspy, which requiers the metadata to be carefully written)
-    
+    s.metadata.Acquisition_instrument.TEM.tilt_stage = tilt_stage
     alpha = (s.metadata.Acquisition_instrument.TEM.Detector.EDS.elevation_angle + 
          s.metadata.Acquisition_instrument.TEM.tilt_stage)*pi/180 
     
