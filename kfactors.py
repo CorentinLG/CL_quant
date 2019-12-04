@@ -1,8 +1,9 @@
 def kfactors (results):
         
+    kf_Ar_K = 1.188
     kf_Al_K = 1.05
     kf_B_K = 5
-    kf_C_K = 1.8
+    kf_C_K = 1.72
     kf_Ca_K = 1.16
     kf_Ca_L = 8.8
     kf_Cl_K = 1.093
@@ -19,7 +20,7 @@ def kfactors (results):
     kf_Mg_K = 0.94
     kf_Mn_K = 1.5
     kf_Mn_L = 3.36
-    kf_N_K = 2.2
+    kf_N_K = 1.24
     kf_Na_K = 0.98
     kf_Ni_K = 1.587
     kf_Ni_L = 1.582
@@ -32,12 +33,14 @@ def kfactors (results):
     kf_Ti_K = 1.25
     kf_Zr_K = 3.65
     kf_Zr_L = 1.49
+    kf_Zn_K = 1.96
     
     kfactors=[]
     
     for line in range (0, len(results)):
         if "Ag_La" in results[line].metadata.Sample.xray_lines:kfactors.append(1)
         elif "Al_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Al_K)
+        elif "Ar_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Ar_K)
         elif "B_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_B_K)
         elif "Bi_Ma" in results[line].metadata.Sample.xray_lines:kfactors.append(1)
         elif "C_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_C_K)
@@ -77,4 +80,5 @@ def kfactors (results):
         elif "Ti_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Ti_K)    
         elif "Zr_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Zr_K)
         elif "Zr_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Zr_L)
+        elif "Zn_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Zn_K)
     return kfactors

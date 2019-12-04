@@ -31,6 +31,7 @@ def correct_result(result):
                 
     for i in range (0, len(result_cor)):
         if "Al_Ka" in result_cor[i].metadata.Sample.xray_lines:result_cor[i].data = result[i].data*1.0131
+        elif "Ar_Ka" in result_cor[i].metadata.Sample.xray_lines:result_cor[i].data = result[i].data*1.10169
         elif "Ca_Ka" in result_cor[i].metadata.Sample.xray_lines:result_cor[i].data = result[i].data*1.112
         elif "Ca_La" in result_cor[i].metadata.Sample.xray_lines:result_cor[i].data = result[i].data*2.23
         elif "Cr_Ka" in result_cor[i].metadata.Sample.xray_lines:result_cor[i].data = result[i].data*1.134
