@@ -1,49 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Apr 23 11:10:00 2020
 
-from math import *
-import math
+@author: Corentin
+"""
+
+from math import sin
 from scipy import pi
+from Correction import correction
 import numpy as np
 import copy
 import hyperspy.api as hs
-
-
-def correction(s, elts, Quant, result_int, result_mod, alpha, mt, navigation_mask, Ac, wt, dif, Crit, D):
-    """
-    This is a subfunction of the absorption correction method.
-	It calculates the absorption correction factor of each x-ray line at each pixel (Ac). 
-	Then, corrected intensities (result_mod) are calculated based on absorption correction factors, density, thickness and sample geometry)
-	There are different cases depending no the nature of the signal (single spectrum vs profile vs map)
-	A criteria is added to not recalculate a given pixel if convergence has been reached already ("if dif[k]>Crit/100)
-
-    """
-    
-    if len(s.data.shape)==1:
-        for k in range (len(s.metadata.Sample.xray_lines)): 
-            if dif[k]>Crit/100:
-                wt.isig[k] = Quant[k]
-                Ac.data[k] = hs.material.mass_absorption_mixture(wt.data, elts, energies = s.metadata.Sample.xray_lines[k])    
-    if len(s.data.shape)==2: 
-        for i in range(result_int[0].data.shape[0]):
-            if navigation_mask.data[i]== False:
-                for k in range (len(s.metadata.Sample.xray_lines)):
-                    if dif[k][i]>Crit/100:
-                        wt.isig[k] = Quant[k]
-                        Ac.inav[i].data[k] = hs.material.mass_absorption_mixture(wt.inav[i].data, elts, energies = s.metadata.Sample.xray_lines[k])    
-    if len(s.data.shape)==3: 
-        for i in range(result_int[0].data.shape[0]):
-            for j in range (result_int[0].data.shape[1]):
-                if navigation_mask.data[i][j]== False:
-                    for k in range (len(s.metadata.Sample.xray_lines)):
-                        if dif[k][i][j]>Crit/100:
-                            wt.isig[k] = Quant[k]
-                            Ac.inav[j,i].data[k] = hs.material.mass_absorption_mixture(wt.inav[j,i].data, elts, energies = s.metadata.Sample.xray_lines[k])    
-                        
-    ### Calculate the corrected intensities thanks to the abs. correction factors           
-    
-    for k in range (len(s.metadata.Sample.xray_lines)):
-        result_mod[k] = result_int[k]*Ac.isig[k]/(np.ones((D[:-1]))-np.exp(-Ac.isig[k]*mt.isig[0]/sin(alpha)))
-    return result_mod, Ac  
 
 def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, navigation_mask = None, Crit = 0.5, composition_units='atomic'):
     """
@@ -60,8 +27,8 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
     result : a list of signals, the integrated gaussian intensitiy of each X-ray lines.
 	s: the signal being quantified. Its metadata (elements and xray_lines) must be documented.
     kfactors : a list of k-factors (must have the same length as xray_lines from s.metadata and as intensities)
-    d : density in g.cm**3 (can be a single value or have the same navigation dimension as the signal, in case a density map is required).
-    t : thickness is in nm (can be a single value or have the same navigation dimension as the signal, but must have the same type and dimension as d).
+    d : density in g.cm**3 (can be a single value or have the same navigation dimension as the dataset. In this case a density map is required as well.
+    t : thickness is in nm (can be a single value or have the same navigation dimension as the dataset, but must have the same type and dimension as d).
     tilt_stage : the sample holder tilt stage, used to calculate the absorption pathways (in degrees).
     navigation_mask : None By default, a BaseSignal of booleans otherwise.
     Crit  : The convergence criterium in percentage of the difference between 2 successive iteration. 0.5% by default.
@@ -74,7 +41,7 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
 
     Examples
     --------
-    result = m.get_line_intensity(xray_lines = 'from_metadata', plot_result = False)
+    
     
     """
     
@@ -105,9 +72,10 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
     
 	### dif is a variable constructed as the difference between the composition for each X-ray lines at each position from two successive iteration.
 	# It is used to check if convergence as been reached.
-	
+
     dif = np.ones((D[-1:]+D[:-1]))
-	
+    Dev = np.ones((D[:-1]))
+
 	### Absorption depends on the take off angle, which is calculated here. (Actually should be better to use the take_off_angle function from hyperspy, which requiers the metadata to be carefully written)
     s.metadata.Acquisition_instrument.TEM.tilt_stage = tilt_stage
     alpha = (s.metadata.Acquisition_instrument.TEM.Detector.EDS.elevation_angle + 
@@ -116,8 +84,16 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
 	### The function later uses the mass_absorption_mixture function from HS, which requires a list of elements.
     elts = []
     for i in range(len(s.metadata.Sample.xray_lines)):
-        elts.append(result[i].metadata.Sample.elements)   
+        elts.append(result[i].metadata.Sample.elements)		
     
+    if len(s.data.shape)!=1:
+        if len(s.data.shape)==2: 
+            a= D[0]     
+        if len(s.data.shape)==3: 
+            a= D[0]*D[1]
+        l = a-np.count_nonzero(navigation_mask.data)
+        print('number of pixels to deal with: ', l, 'total number of pixels: ', a)       
+
 	### since the "result" variable is manipulated several times, better copy it deeply before.
     result_int = copy.deepcopy(result) 
     result_mod = copy.deepcopy(result)   
@@ -137,8 +113,8 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
         Quant = Quant2
         
         #Calculation of intensities corrected for absorption
-        result_mod, Ac = correction (s, elts, Quant, result_int, result_mod, alpha, mt, navigation_mask, Ac, wt, dif, Crit, D)
-
+        result_mod, Ac = correction(s, elts, Quant, result_int, result_mod, alpha, mt, navigation_mask, D, Dev, dif, 0.0001, Ac, wt)
+        
         #New quantification using corrected intensities
         Quant2 = s.quantification(method="CL", intensities=result_mod, factors=kfactors, composition_units='weight', navigation_mask=navigation_mask, plot_result=False)          
           
@@ -147,5 +123,6 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
             dif[i]= abs(Quant[i].data-Quant2[i].data)/Quant[i].data
 
     if composition_units == 'atomic': Quant3 = hs.material.weight_to_atomic(Quant2, elements='auto')
-    return Quant3
+    if composition_units == 'weight': Quant3 = Quant2
 
+    return Quant3

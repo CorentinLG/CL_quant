@@ -3,7 +3,7 @@ def kfactors (results):
     kf_Ar_K = 1.188
     kf_Al_K = 1.05
     kf_B_K = 5
-    kf_C_K = 1.72
+    kf_C_K = 1.42
     kf_Ca_K = 1.16
     kf_Ca_L = 8.8
     kf_Cl_K = 1.093
@@ -12,25 +12,27 @@ def kfactors (results):
     kf_Cu_K = 1.773
     kf_Cu_L = 1.523
     kf_F_K = 1
-    kf_Fe_K = 1.56
-    kf_Fe_L = 2.65
+    kf_Fe_K = 1.50
+    kf_Fe_L = 2.55
     kf_Ga_K = 1
     kf_Ga_L = 1
     kf_K_K = 1.119
     kf_Mg_K = 0.94
     kf_Mn_K = 1.5
     kf_Mn_L = 3.36
-    kf_N_K = 1.24
+    kf_N_K = 1.18
     kf_Na_K = 0.98
     kf_Ni_K = 1.587
     kf_Ni_L = 1.582
-    kf_O_K = 0.98
+    kf_O_K = 0.95
     kf_P_K = 1.096
+    kf_Pb_L = 2.85
     kf_Pt_L = 1
     kf_Pt_M = 1
-    kf_S_K = 1.54
+    kf_S_K = 1.18
     kf_Si_K = 1
     kf_Ti_K = 1.25
+    kf_Tl_M = 1  # Not known
     kf_Zr_K = 3.65
     kf_Zr_L = 1.49
     kf_Zn_K = 1.96
@@ -65,19 +67,21 @@ def kfactors (results):
         elif "Mg_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Mg_K)
         elif "Mn_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Mn_K)
         elif "Mn_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Mn_L)
-        elif "Mg_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Mn_L)
+        elif "Mg_La" in results[line].metadata.Sample.xray_lines:kfactors.append(0)
         elif "N_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_N_K)
         elif "Na_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Na_K)
         elif "Ni_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Ni_K)
         elif "Ni_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Ni_L)     
         elif "O_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_O_K)       
         elif "P_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_P_K)
+        elif "Pb_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Pb_L)
         elif "Pt_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Pt_L)
         elif "Pt_Ma" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Pt_M)
         elif "S_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_S_K)
         elif "Si_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Si_K)
-        elif "Sn_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Si_K)
-        elif "Ti_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Ti_K)    
+        elif "Sn_La" in results[line].metadata.Sample.xray_lines:kfactors.append(1)
+        elif "Ti_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Ti_K)
+        elif "Tl_Ma" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Tl_M)
         elif "Zr_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Zr_K)
         elif "Zr_La" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Zr_L)
         elif "Zn_Ka" in results[line].metadata.Sample.xray_lines:kfactors.append(kf_Zn_K)
