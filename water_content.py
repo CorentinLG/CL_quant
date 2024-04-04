@@ -49,7 +49,7 @@ def water_content (s, quantification, valence):
     H = (H*100)/(H+100)
 
     Quant_H2O.append(H)
-    Quant_H2O_wt = hs.material.atomic_to_weight(Quant_H2O)
+    Quant_H2O_wt = exspy.material.atomic_to_weight(Quant_H2O)
     
     H2O = []
     for i in range (len(Quant_H2O)):
