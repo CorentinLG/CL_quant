@@ -24,13 +24,13 @@ def data_output (Quant, result, H2O_List = None, mt_List = None, density_or_thic
         R[i] = (result[i].data).flatten()
         R[i] = np.nan_to_num(R[i])
     
-    if mt_List != None : 
+    if mt_List is not None : 
         mt = mt_List.data.flatten()
         mt = np.nan_to_num(mt)
-    if H2O_List != None : 
+    if H2O_List is not None : 
         H2O = H2O_List.flatten()
         H2O = np.nan_to_num(H2O)
-    if density_or_thickness !=None:
+    if density_or_thickness is not None:
         d_or_t = np.ones(shape=mt.shape, dtype=float)
         for i in range (len(d_or_t)):
             d_or_t[i]= density_or_thickness
@@ -52,9 +52,9 @@ def data_output (Quant, result, H2O_List = None, mt_List = None, density_or_thic
             if Q[:,j].any() != 0:
                 worksheet_table.write (k+1,0, str(k))
                 worksheet_table.write(k+1,i+1, Q[i][j])
-                if H2O_List != None : worksheet_table.write (k+1, len(row)+1, H2O[j])
-                if mt_List != None :worksheet_table.write (k+1, len(row)+2, mt[j]/(d_or_t[j]*10**-7))
-                if density_or_thickness != None : worksheet_table.write (k+1, len(row)+3, d_or_t[j])
+                if H2O_List is not None : worksheet_table.write (k+1, len(row)+1, H2O[j])
+                if mt_List is not None :worksheet_table.write (k+1, len(row)+2, mt[j]/(d_or_t[j]*10**-7))
+                if density_or_thickness is not None : worksheet_table.write (k+1, len(row)+3, d_or_t[j])
                 #worksheet_table.write (i+1, len(row)+4, Dev[i])
                 k=k+1
     for i in range(len(R)):

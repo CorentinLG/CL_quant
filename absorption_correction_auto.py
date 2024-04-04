@@ -222,12 +222,12 @@ def absorption_correction_auto(result, s, kfactors,
         ######  Further quantification using WATER corrected Abs Correction factors
         if water == True:
             if valence == None : raise ValueError('a list of valence for each xray_lines or element should be provided as argument')
-            Quant_f = hs.material.weight_to_atomic(Quant_f, elements='auto')
+            Quant_f = exspy.material.weight_to_atomic(Quant_f, elements='auto')
             Quant_f, H2O_f = water_content(s, Quant_f, valence)
-            Quant_f = hs.material.atomic_to_weight(Quant_f, elements='auto')
+            Quant_f = exspy.material.atomic_to_weight(Quant_f, elements='auto')
             print('Water computed')
 
-        if composition_units=='atomic': Quant_f = hs.material.weight_to_atomic(Quant_f, elements='auto')
+        if composition_units=='atomic': Quant_f = exspy.material.weight_to_atomic(Quant_f, elements='auto')
         
 ###########################################################################################################        
 ### If two different elements are used, then only one quantification is performed and the convergence criteria are internal to this calculation
@@ -272,12 +272,12 @@ def absorption_correction_auto(result, s, kfactors,
         ############################################
         if water == True:
             if valence == None : raise ValueError('a list of valence for each xray_lines or element should be provided as argument')
-            Quant_f = hs.material.weight_to_atomic(Quant_f, elements='auto')
+            Quant_f = exspy.material.weight_to_atomic(Quant_f, elements='auto')
             Quant_f, H2O_f = water_content (s, Quant_f, valence)
             print('Water computed')
-            Quant_f = hs.material.atomic_to_weight(Quant_f, elements='auto')
+            Quant_f = exspy.material.atomic_to_weight(Quant_f, elements='auto')
 
-        if composition_units=='atomic': Quant_f = hs.material.weight_to_atomic(Quant_f, elements='auto')
+        if composition_units=='atomic': Quant_f = exspy.material.weight_to_atomic(Quant_f, elements='auto')
 
     if water==False : H2O_f = np.zeros((D[:-1]))
     if len(s.data.shape)==2:                             

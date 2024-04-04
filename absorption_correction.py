@@ -122,7 +122,7 @@ def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, 
         for i in range (len(Quant)):
             dif[i]= abs(Quant[i].data-Quant2[i].data)/Quant[i].data
 
-    if composition_units == 'atomic': Quant3 = hs.material.weight_to_atomic(Quant2, elements='auto')
+    if composition_units == 'atomic': Quant3 = exspy.material.weight_to_atomic(Quant2, elements='auto')
     if composition_units == 'weight': Quant3 = Quant2
 
     return Quant3
