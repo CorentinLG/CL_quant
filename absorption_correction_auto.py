@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from math import sin
-from scipy import pi
+from math import pi
 import numpy as np
 import copy
 import hyperspy.api as hs
 from water_content import water_content
 from Correction import correction
+import exspy
 
 
 def compare (Quant1, Quant2, line1, line2, Elt_rat, mt, d, Full_mask, D, Crit_mt, Min_thickness):

@@ -6,6 +6,7 @@ Created on Sun Nov 26 16:26:24 2017
 """
 
 import hyperspy.api as hs
+import exspy
 
 def water_content (s, quantification, valence):
     """This routine calculate the water content of a quantified spectrum based on the electroneutrality assumption,

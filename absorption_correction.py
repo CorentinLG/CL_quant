@@ -6,11 +6,12 @@ Created on Thu Apr 23 11:10:00 2020
 """
 
 from math import sin
-from scipy import pi
+from math import pi
 from Correction import correction
 import numpy as np
 import copy
 import hyperspy.api as hs
+import exspy
 
 def absorption_correction (result, s, kfactors, d = 3, t = 100, tilt_stage = 0, navigation_mask = None, Crit = 0.5, composition_units='atomic'):
     """
